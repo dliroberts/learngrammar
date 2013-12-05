@@ -1,0 +1,136 @@
+###
+(<T *** S[dcl] * 0 2>
+(<T *** S[dcl] * 1 2>
+(<T *** NP * 0 2>
+(<T *** NP * 0 2>
+(<T *** NP * 0 2>
+(<T *** NP * 0 1>
+(<T *** N * 1 2>
+(<L *** N/N NNP Pierre>
+)
+(<L *** N NNP Vinken>
+)
+)
+)
+(<L *** , , ,>
+)
+)
+(<T *** NP\NP * 0 1>
+(<T *** S[adj]\NP * 1 2>
+(<T *** NP * 0 1>
+(<T *** N * 1 2>
+(<L *** N/N CD 61>
+)
+(<L *** N NNS years>
+)
+)
+)
+(<L *** (S[adj]\NP)\NP JJ old>
+)
+)
+)
+)
+(<L *** , , ,>
+)
+)
+(<T *** S[dcl]\NP * 0 2>
+(<L *** (S[dcl]\NP)/(S[b]\NP) MD will>
+)
+(<T *** S[b]\NP * 0 2>
+(<T *** S[b]\NP * 0 2>
+(<T *** (S[b]\NP)/PP * 0 2>
+(<L *** ((S[b]\NP)/PP)/NP VB join>
+)
+(<T *** NP * 1 2>
+(<L *** NP[nb]/N DT the>
+)
+(<L *** N NN board>
+)
+)
+)
+(<T *** PP * 0 2>
+(<L *** PP/NP IN as>
+)
+(<T *** NP * 1 2>
+(<L *** NP[nb]/N DT a>
+)
+(<T *** N * 1 2>
+(<L *** N/N JJ nonexecutive>
+)
+(<L *** N NN director>
+)
+)
+)
+)
+)
+(<T *** (S\NP)\(S\NP) * 0 2>
+(<L *** ((S\NP)\(S\NP))/N[num] NNP Nov.>
+)
+(<L *** N[num] CD 29>
+)
+)
+)
+)
+)
+(<L *** . . .>
+)
+)
+
+###
+(<T *** S[dcl] * 0 2>
+(<T *** S[dcl] * 1 2>
+(<T *** NP * 0 1>
+(<T *** N * 1 2>
+(<L *** N/N NNP Mr.>
+)
+(<L *** N NNP Vinken>
+)
+)
+)
+(<T *** S[dcl]\NP * 0 2>
+(<L *** (S[dcl]\NP)/NP VBZ is>
+)
+(<T *** NP * 0 2>
+(<T *** NP * 0 1>
+(<L *** N NN chairman>
+)
+)
+(<T *** NP\NP * 0 2>
+(<L *** (NP\NP)/NP IN of>
+)
+(<T *** NP * 0 2>
+(<T *** NP * 0 1>
+(<T *** N * 1 2>
+(<L *** N/N NNP Elsevier>
+)
+(<L *** N NNP N.V.>
+)
+)
+)
+(<T *** NP[conj] * 1 2>
+(<L *** , , ,>
+)
+(<T *** NP * 1 2>
+(<L *** NP[nb]/N DT the>
+)
+(<T *** N * 1 2>
+(<L *** N/N NNP Dutch>
+)
+(<T *** N * 1 2>
+(<L *** N/N VBG publishing>
+)
+(<L *** N NN group>
+)
+)
+)
+)
+)
+)
+)
+)
+)
+)
+(<L *** . . .>
+)
+)
+

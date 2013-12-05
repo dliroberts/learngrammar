@@ -1,0 +1,40 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+sourceCompatibility = 1.7
+version = '1.0'
+jar {
+	manifest {
+		attributes 'Implementation-Title': 'LearnGrammar', 'Implementation-Version': 1, 'Main-Class': 'uk.ac.cam.dr369.learngrammar.LearnGrammar'
+	}
+}
+
+repositories {
+	mavenCentral()
+/*	mavenRepo (
+		name: 'Archiva',
+		url: 'http://maven.aksw.org/archiva/repository/internal'
+	)
+*/}
+
+dependencies {
+	
+	// Logging - Log4j 2, but via the SLF4J facade.
+	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.5'
+	compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.0-beta9'
+	compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.0-beta9'
+	compile group: 'commons-lang', name: 'commons-lang', version: '2.6'
+
+	// NLP
+	compile group: 'edu.mit', name: 'jwi', version: '2.2.1' // WordNet API. TODO not tested since 2.1.5...
+	// TODO make code compatible with SimpleNLG 4.3 so that this can be replaced with the commented repo
+	// reference below.
+	compile files('./lib/simplenlg-3.8/simplenlg-3.8.jar')
+	// compile group: 'simplenlg', name: 'simplenlg', version: '4.3'
+
+	// Misc
+	compile group: 'com.google.guava', name: 'guava', version: 'r09'
+	compile group: 'com.beust', name: 'jcommander', version: '1.32' // Command-line parsing
+
+	testCompile group: 'junit', name: 'junit', version: '4.+'
+}

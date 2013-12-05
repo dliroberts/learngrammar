@@ -1,0 +1,68 @@
+==CORPUS==
+
+The carrots in the garden are my favourites.
+(ncsubj are "The _carrots_ in the garden" _)
+
+My best friend in the world likes to gossip.
+ncsubj likes "My best friend in the world"
+
+==TEST==
+
+He likes oranges
+>
+My best friend in the world likes oranges
+
+==IMPLEMENTATION==
+
+1. Syntax:
+
+$likes>ncsubj
+
+2. in LearnGrammar:
+
+DepStr heLikesOrangesDs;
+DepStr friendLikesGossipDs;
+GR ncsubjLikesHeGr;
+GR ncsubjLikesFriendGr;
+
+heLikesOrangesDs.substitute(ncsubjLikesHeGr, ncsubjLikesFriendGr)
+
+3. In DS.substitute:
+
+Save from.head.
+Save indices (min and max) of tokens under 'from' GR (crash out for the moment if not contiguous!)
+Make list of GRs and tokens ONLY referenced by subtree headed by 'from'. Remove all such tokens and GRs from DS.
+Attach 'to' GR to from.head.
+Find all tokens that sit underneath 'to'. (partially implemented: findDependencySubset)
+Insert these tokens into the token list, starting at min index.
+Fix indices by iterating over tokens and setting their indices to be their list positions.
+
+====================================
++++crashes!!! - fixed
+corpus:
+The meat which I ate was raw.
+test:
+I gave some games to my son.
+command:
+$gave>dobj
+expected:
+I gave the meat which I ate to my son.
+
+====================================
+
+Sentence: "The meat which I ate was raw.";
+GRs: [
+	(det meat:1|NN The:0|DT), 
+	(ncsubj ate:4|VBP I:3|PRP _), 
+	(cmod which:2|WDT meat:1|NN ate:4|VBP), 
+	(dobj ate:4|VBP meat:1|NN), 
+	(xcomp _ was:5|VBD raw:6|JJ), 
+	(ncsubj was:5|VBD meat:1|NN _)
+]; tokens: [The:0|DT, meat:1|NN, which:2|WDT, I:3|PRP, ate:4|VBP, was:5|VBD, raw:6|JJ, .:7|.]
+> !ate>dobj
+The meat I ate
+> 
+
+====================================
+
+

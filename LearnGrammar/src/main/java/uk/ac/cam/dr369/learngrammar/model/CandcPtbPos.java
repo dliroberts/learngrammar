@@ -25,6 +25,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * C&C's extended version of the Penn Treebank POS tagset.
+ * 
+ * @author duncan.roberts
+ *
+ */
 public enum CandcPtbPos implements Pos {
 	ADJECTIVE(									"JJ",  "adjective",									ADJECTIVE_GENERAL),
 	ADJECTIVE_COMPARATIVE(						"JJR", "comparative adjective",						ADJECTIVE_GENERAL, COMPARATIVE_GENERAL),

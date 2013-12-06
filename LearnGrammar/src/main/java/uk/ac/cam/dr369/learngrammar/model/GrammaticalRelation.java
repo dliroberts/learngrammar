@@ -16,6 +16,12 @@ import java.util.TreeSet;
 import uk.ac.cam.dr369.learngrammar.util.Utils.VeryCloneable;
 import uk.ac.cam.dr369.learngrammar.util.Utils.Wrapper;
 
+/**
+ * A relationship between two tokens in a sentence. 
+ * 
+ * @author duncan.roberts
+ *
+ */
 public class GrammaticalRelation implements VeryCloneable<GrammaticalRelation>, Comparable<GrammaticalRelation>, Serializable {
 	private static final long serialVersionUID = -7401562800190577461L;
 
@@ -303,6 +309,11 @@ public class GrammaticalRelation implements VeryCloneable<GrammaticalRelation>, 
 		HEAD, DEPENDENT, SUBTYPE
 	}
 	
+	/**
+	 * Matches the definitions of GRs used by RASP/C&C - UPenn's parser has a different standard with different types.
+	 * @author duncan.roberts
+	 *
+	 */
 	public enum GrType {
 //		DEPENDENT               ("dependent"), // programmatically, what's the use of DEPENDENT?
 		TEXT_ADJUNCT            ("ta",        1,   "text adjunct (e.g. punctuation)"/*,   DEPENDENT*/),

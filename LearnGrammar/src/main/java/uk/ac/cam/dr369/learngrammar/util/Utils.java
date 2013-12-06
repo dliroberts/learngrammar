@@ -7,37 +7,47 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.BreakIterator;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import com.google.common.collect.Table;
-
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.collect.Table;
 
 public class Utils {
 	/** For convenience */
 	public static final String NEWLINE = System.getProperty("line.separator");
 	
-	private static final List<String> COMMON_TOKENISER_MAP_TOK = new ArrayList<String>();
-	private static final List<String> COMMON_TOKENISER_MAP_DETOK = new ArrayList<String>();
-	private static final List<String> TOKENISER_MAP_TOK = new ArrayList<String>();
-	private static final List<String> TOKENISER_MAP_DETOK = new ArrayList<String>();
-	private static final List<String> DETOKENISER_MAP_TOK = new ArrayList<String>();
-	private static final List<String> DETOKENISER_MAP_DETOK = new ArrayList<String>();
+	private static final Properties PROPERTIES = new Properties();
+	
+	private static final List<String> COMMON_TOKENISER_MAP_TOK = Lists.newArrayList();
+	private static final List<String> COMMON_TOKENISER_MAP_DETOK = Lists.newArrayList();
+	private static final List<String> TOKENISER_MAP_TOK = Lists.newArrayList();
+	private static final List<String> TOKENISER_MAP_DETOK = Lists.newArrayList();
+	private static final List<String> DETOKENISER_MAP_TOK = Lists.newArrayList();
+	private static final List<String> DETOKENISER_MAP_DETOK = Lists.newArrayList();
 	
 	static {
+		try {
+			PROPERTIES.load(Utils.class.getClassLoader().getResourceAsStream(("LearnGrammar.properties")));
+		} catch (IOException e) {
+			throw new RuntimeException("Unable to load properties file.", e);
+		}
+		
 		COMMON_TOKENISER_MAP_TOK.add(" -LRB- "); COMMON_TOKENISER_MAP_DETOK.add(" (");
 		COMMON_TOKENISER_MAP_TOK.add(" -RRB- "); COMMON_TOKENISER_MAP_DETOK.add("); ");
 		COMMON_TOKENISER_MAP_TOK.add(" -LSB- "); COMMON_TOKENISER_MAP_DETOK.add(" [");
@@ -59,7 +69,7 @@ public class Utils {
 		COMMON_TOKENISER_MAP_TOK.add(" / ");     COMMON_TOKENISER_MAP_DETOK.add("/");
 		COMMON_TOKENISER_MAP_TOK.add(" %");      COMMON_TOKENISER_MAP_DETOK.add("%");
 		COMMON_TOKENISER_MAP_TOK.add("$ ");      COMMON_TOKENISER_MAP_DETOK.add("$");
-		COMMON_TOKENISER_MAP_TOK.add("£ ");      COMMON_TOKENISER_MAP_DETOK.add("£");
+		COMMON_TOKENISER_MAP_TOK.add("£ ");     COMMON_TOKENISER_MAP_DETOK.add("£"); // XXX odd encoding-related schenanigans...
 		
 		// Using \t as temporary character for instances of ' that are a part of a token while we substitute quotation marks.
 		TOKENISER_MAP_TOK.add(" \ts ");   TOKENISER_MAP_DETOK.add("'s ");
@@ -140,7 +150,7 @@ public class Utils {
 		return text.trim();
 	}
 	public static List<String> tokeniseSentences(String sentences) {
-		List<String> sentenceList = new ArrayList<String>();
+		List<String> sentenceList = Lists.newArrayList();
 		BreakIterator sentenceIterator = BreakIterator.getSentenceInstance(Locale.US); // because we're using the WSJ corpus!
 		sentenceIterator.setText(sentences);
 		int start = sentenceIterator.first();
@@ -157,10 +167,16 @@ public class Utils {
 		}
 		return src.subList(from, to);
 	}
+	/**
+	 * Determines whether the value exists for a given key. If not, it's created and inserted.
+	 * @param map
+	 * @param arg
+	 * @return
+	 */
 	public static <T, U> List<U> establishList(Map<T, List<U>> map, T arg) {
 		List<U> list = map.get(arg);
 		if (list == null) {
-			list = new ArrayList<U>();
+			list = Lists.newArrayList();
 			map.put(arg, list);
 		}
 		return list;
@@ -168,7 +184,7 @@ public class Utils {
 	public static <T, U> Set<U> establishSet(Map<T, Set<U>> map, T arg) {
 		Set<U> set = map.get(arg);
 		if (set == null) {
-			set = new HashSet<U>();
+			set = Sets.newHashSet();
 			map.put(arg, set);
 		}
 		return set;
@@ -176,7 +192,7 @@ public class Utils {
 	public static <T, U, V> Map<U, V> establishMap(Map<T, Map<U, V>> map, T arg) {
 		Map<U, V> submap = map.get(arg);
 		if (submap == null) {
-			submap = new HashMap<U, V>();
+			submap = Maps.newHashMap();
 			map.put(arg, submap);
 		}
 		return submap;
@@ -184,7 +200,7 @@ public class Utils {
 	public static <R, C, V> Set<V> establishSetInTable(Table<R, C, Set<V>> multitable, R row, C col) {
 		Set<V> cellValueSet = multitable.get(row, col);
 		if (cellValueSet == null) {
-			cellValueSet = new HashSet<V>();
+			cellValueSet = Sets.newHashSet();
 			multitable.put(row, col, cellValueSet);
 		}
 		return cellValueSet;
@@ -192,7 +208,7 @@ public class Utils {
 	public static <R, C, V> List<V> establishListInTable(Table<R, C, List<V>> multitable, R row, C col) {
 		List<V> cellValueSet = multitable.get(row, col);
 		if (cellValueSet == null) {
-			cellValueSet = new ArrayList<V>();
+			cellValueSet = Lists.newArrayList();
 			multitable.put(row, col, cellValueSet);
 		}
 		return cellValueSet;
@@ -200,11 +216,18 @@ public class Utils {
 	public static <R, C, K, V> Map<K, V> establishMapInTable(Table<R, C, Map<K, V>> multitable, R row, C col) {
 		Map<K, V> cellValueMap = multitable.get(row, col);
 		if (cellValueMap == null) {
-			cellValueMap = new HashMap<K, V>();
+			cellValueMap = Maps.newHashMap();
 			multitable.put(row, col, cellValueMap);
 		}
 		return cellValueMap;
 	}
+	/**
+	 * Sets the value of all elements of <code>keys</code> to <code>value</code> in <code>dest</code>.
+	 * 
+	 * @param dest
+	 * @param keys
+	 * @param value
+	 */
 	public static <T,U> void putSameValue(Map<T,U> dest, Collection<T> keys, U value) {
 		for (T t : keys) {
 			dest.put(t, value);
@@ -237,20 +260,13 @@ public class Utils {
 			}
 		}
 	}
-	public static <T> List<T> list(T... elems) {
-		return Arrays.asList(elems);
-	}
-	public static <T> List<T> oneElem(T elem) {
-		List<T> l = new ArrayList<T>();
-		l.add(elem);
-		return l;
-	}
 	public static <T> List<T> combine(Collection<T> a, Collection<T> b) {
 		List<T> combined = new ArrayList<T>();
 		if (a != null)
 			combined.addAll(a);
 		if (b != null)
 			combined.addAll(b);
+		
 		return combined;
 	}
 	public static <T> Set<T> union(Collection<T> a, Collection<T> b) {
@@ -285,7 +301,7 @@ public class Utils {
 			Map.Entry<T, ?> me = (Map.Entry<T, ?>) it.next();
 			Object value = me.getValue();
 			if (value instanceof Map) {
-				Map m = (Map) value;
+				Map<T,?> m = (Map<T,?>) value;
 				pruneMultilevelMap(m);
 				if (m.keySet().isEmpty()) {
 					it.remove();
@@ -326,6 +342,12 @@ public class Utils {
 		String lc = text.toLowerCase();
 		return String.valueOf(lc.charAt(0)).toUpperCase() + lc.substring(1).toLowerCase();
 	}
+	/**
+	 * Does what Cloneable was supposed to do.
+	 * @author duncan.roberts
+	 *
+	 * @param <T>
+	 */
 	public interface VeryCloneable<T> extends Cloneable {
 		public T clone();
 	}
@@ -394,7 +416,7 @@ public class Utils {
 	}
 
 	public static List<GrammaticalRelation.GrType> getGrTypes(List<GrammaticalRelation> grs) {
-		List<GrammaticalRelation.GrType> grTypes = new ArrayList<GrammaticalRelation.GrType>();
+		List<GrammaticalRelation.GrType> grTypes = Lists.newArrayList();
 		for (GrammaticalRelation gr : grs) {
 			grTypes.add(gr.type());
 		}
@@ -434,5 +456,9 @@ public class Utils {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public static String getProperty(String key) {
+		return PROPERTIES.getProperty(key);
 	}
 }

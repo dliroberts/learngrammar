@@ -5,7 +5,12 @@ import java.util.Collections;
 
 import uk.ac.cam.dr369.learngrammar.util.Utils;
 
-
+/**
+ * An individual question in a grammar test. The user is asked to identify which of the provided sentences exemplifies some grammatical feature.
+ * 
+ * @author duncan.roberts
+ *
+ */
 public class GrammarQuestion {
 	private final String questionText;
 	private final String correctAnswer;

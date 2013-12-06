@@ -37,6 +37,7 @@ public class Commonality {
 	private static final double CORRECT_QUALITY_THRESHOLD = 0.68d;
 	private static final double INCORRECT_QUALITY_THRESHOLD = 0.45d; // we need more incorrect answers, and are less fussy about them!
 	
+	// The weights in this table are crying out for optimisation, e.g. with a maximum entropy model
 	private static final List<FeatureProfile> FEATURE_PROFILES = ImmutableList.of(
 			//                 TOKEN_LEVEL_________ GR_LVL GENERAL____________________
 			//                 lemmas POS    Suptag GrType rcurse base multi maxheight

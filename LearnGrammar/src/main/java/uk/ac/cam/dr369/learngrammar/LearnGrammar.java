@@ -54,11 +54,7 @@ import edu.mit.jwi.item.IWord;
 /**
  * Entry point into application.
  * 
- * Note that the app only works in *nix! The program itself is portable, but depends on
- * syntactic parsers that are not.
- * 
  * @author duncan.roberts
- *
  */
 public class LearnGrammar {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LearnGrammar.class);
@@ -72,7 +68,7 @@ public class LearnGrammar {
 	
 	static {
 		try { // TODO use .properties file for wordnet path
-			DICTIONARY_URL = new URL("file", null, "lib/wordnet"+File.separator+"WordNet-3.0"+File.separator+"dict");
+			DICTIONARY_URL = new URL("file", null, Utils.getProperty("wordnet.path"));
 			WordnetSemanticAnalyser.getInstance(DICTIONARY_URL); // initialises singleton internally with dictionary
 		} catch (MalformedURLException e) { // Once the file path is in the props file this becomes possible; handle gracefully
 			throw new Error();
@@ -82,17 +78,25 @@ public class LearnGrammar {
 	private static List<String> similarSentences = Lists.newArrayList();
 	private static List<String> wrongAnswers = Lists.newArrayList();
 	
-	public static void main(String[] args) throws Exception { // TODO jcommander
-		SyntacticParser parser = args.length > 0 && args[0].equalsIgnoreCase("RASP") ? new RaspSyntacticParser() : new CandcSyntacticParser(false); // TODO ioc dependency injection
-		boolean supervised = Arrays.asList(args).contains("cutoff=supervised");
-		boolean commonalityOnly = Arrays.asList(args).contains("mode=commonality");
+	public static void main(String[] args) throws Exception {
+		SyntacticParser parser = Utils.getProperty("parser").equals("rasp") ?
+				new RaspSyntacticParser() :
+				new CandcSyntacticParser(Boolean.parseBoolean(Utils.getProperty("candc.webservice"))); // TODO ioc/dependency injection
+		boolean supervised = Boolean.parseBoolean(Utils.getProperty("supervised"));
+		boolean commonalityOnly = Boolean.parseBoolean(Utils.getProperty("commonality.only"));
 		
 		Collection<DependencyStructure> corpusDeps;
-		if (parser instanceof CandcSyntacticParser && args.length > 1) {
+		if (parser instanceof CandcSyntacticParser) { // TODO abstract away dependency on C&C
 			long start = new Date().getTime();
 			CandcSyntacticParser ccp = (CandcSyntacticParser) parser;
-			corpusDeps = ccp.loadCorpus(new File(args[1]));//, 4000); // TODO remove cap when done with testing
-			System.out.println(corpusDeps.size() + " sentences loaded from corpus file "+args[1]+".");
+			String corpus = Utils.getProperty("candc.corpus.file");
+			String maxCorpusLines = Utils.getProperty("candc.corpus.lines");
+			corpusDeps = ccp.loadCorpus(
+					new File(
+							ClassLoader.getSystemResource(corpus).toURI()
+						), maxCorpusLines.equals("unlimited") ? null : Integer.parseInt(maxCorpusLines)
+					);
+			LOGGER.info("{} sentences loaded from corpus file {}.", corpusDeps.size(), corpus);
 			long end = new Date().getTime();
 			LOGGER.info("Took {}s to load corpus.", (int) ((end-start)/1000));
 		}
@@ -335,7 +339,7 @@ public class LearnGrammar {
 			}
 			else if (sentence.startsWith("%") && lastDs != null) {
 				Set<String> tags = new HashSet<String>(Arrays.asList(sentence.substring(1).split(", ?")));
-				System.out.println("Tags: " + tags);
+				LOGGER.debug("Tags: {}", tags);
 				
 				Map<Token,Token> toReplace = new HashMap<Token,Token>();
 				for (Token token : lastDs.getTokens()) {

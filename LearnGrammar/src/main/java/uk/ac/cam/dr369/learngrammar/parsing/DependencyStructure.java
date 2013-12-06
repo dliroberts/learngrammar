@@ -45,8 +45,6 @@ public class DependencyStructure implements Comparable<DependencyStructure>, Ver
 							break;
 						}
 					}
-					if (dependent == null)
-						throw new IllegalStateException(gr+": could not find dependent "+dependent+" in tokens argument.");
 				}
 				if (head != null) { // When building subgraphs of DependencyStructures, headless GRs are acceptable
 					for (Token tok : tokens) {
@@ -55,8 +53,6 @@ public class DependencyStructure implements Comparable<DependencyStructure>, Ver
 							break;
 						}
 					}
-					if (head == null)
-						throw new IllegalStateException(gr+": Could not find head "+head+" in tokens argument.");
 				}
 				if (subtype instanceof TokenSubtype) {
 					Token grsu = ((TokenSubtype) subtype).token();
@@ -66,8 +62,6 @@ public class DependencyStructure implements Comparable<DependencyStructure>, Ver
 							break;
 						}
 					}
-					if (subtype == null)
-						throw new IllegalStateException("Could not find "+subtype+" in tokens argument.");
 				}
 				it.set(new GrammaticalRelation(gr.type(), subtype, gr.getInitialGrValue(), head, dependent));
 			}

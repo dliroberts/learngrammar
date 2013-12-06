@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
+
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation;
 import uk.ac.cam.dr369.learngrammar.model.Pos;
 import uk.ac.cam.dr369.learngrammar.model.Token;
@@ -15,6 +17,11 @@ import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.TokenSubtype;
 import uk.ac.cam.dr369.learngrammar.parsing.DependencyStructure;
 import uk.ac.cam.dr369.learngrammar.util.Utils;
 
+/**
+ * A portion of a tree is a twig. Dependency structures aren't actually trees, but nevermind. Represents a subsection of a DS.
+ * 
+ * @author duncan.roberts
+ */
 public class Twig extends DependencyStructure implements Iterable<PathItem> {
 	private static final long serialVersionUID = -4862089177272984180L;
 	private final FeatureProfile profile;
@@ -397,7 +404,7 @@ public class Twig extends DependencyStructure implements Iterable<PathItem> {
 		
 		List<Twig> dses = new ArrayList<Twig>();
 		if (height == 0) {
-			Twig ds = new Twig(new ArrayList<GrammaticalRelation>(), Utils.oneElem(usChild), false, profile);
+			Twig ds = new Twig(new ArrayList<GrammaticalRelation>(), ImmutableList.of(usChild), false, profile);
 			dses.add(ds);
 			return dses;
 		}
@@ -414,16 +421,16 @@ public class Twig extends DependencyStructure implements Iterable<PathItem> {
 			if (height == 1 && profile.grs() && !token.headOf().isEmpty() &&
 					((!profile.tokens() && origHeight > 2) || profile.tokens())) { // generate GR (top=GR)
 				GrammaticalRelation gr = new GrammaticalRelation(null, null, "Null-"+height, null, usChild);
-				List<Token> t = Utils.oneElem(usChild);
-				List<GrammaticalRelation> g = Utils.oneElem(gr);
+				List<Token> t = ImmutableList.of(usChild);
+				List<GrammaticalRelation> g = ImmutableList.of(gr);
 				dses.add(new Twig(g, t, false, profile));
 			}
 			// generate GR and its parent token (top=token). Skip over tokens not included in GR graph such as punctuation.
 			else if (height == 2 && profile.tokens() && !profile.grs() && !token.getGrs().isEmpty()) {
 				Token tok = new Token("NULL", null, -height, null, null, null);
 				GrammaticalRelation gr = new GrammaticalRelation(null, null, "Null-"+height, tok, usChild);
-				List<Token> t = Utils.list(usChild, tok);
-				List<GrammaticalRelation> g = Utils.oneElem(gr);
+				List<Token> t = ImmutableList.of(usChild, tok);
+				List<GrammaticalRelation> g = ImmutableList.of(gr);
 				dses.add(new Twig(g, t, false, profile));
 			}
 			// If neither of these conditions is met, this is fine: when we iterate using a lower height, we'll hit one or the other.
@@ -434,7 +441,7 @@ public class Twig extends DependencyStructure implements Iterable<PathItem> {
 			FeatureProfile profile, int height, int origHeight, boolean subtype) {
 		if (height == 1) {
 			GrammaticalRelation usGr = underspecify(parentGr, profile, null, subtype ? new TokenSubtype(usChild) : null, subtype ? null : usChild);
-			Twig ds = new Twig(Utils.oneElem(usGr), Utils.oneElem(usChild), false, profile);
+			Twig ds = new Twig(ImmutableList.of(usGr), ImmutableList.of(usChild), false, profile);
 			dses.add(ds);
 		}
 		else {
@@ -442,14 +449,14 @@ public class Twig extends DependencyStructure implements Iterable<PathItem> {
 			Token usParent = underspecify(parentTok, profile, -height);
 			GrammaticalRelation usGr = underspecify(parentGr, profile, usParent, subtype ? new TokenSubtype(usChild) : null, subtype ? null : usChild);
 			if (height == 2) {
-				Twig ds = new Twig(Utils.oneElem(usGr), Utils.list(usChild, usParent), false, profile);
+				Twig ds = new Twig(ImmutableList.of(usGr), ImmutableList.of(usChild, usParent), false, profile);
 				dses.add(ds);
 			}
 			else if (height > 2) { // recurse!
 				List<Twig> parentDses = getPartialStructureForToken(parentTok, usParent, profile, height - 2, origHeight);
 				for (Twig pds : parentDses) {
-					List<Token> t = Utils.combine(pds.getTokens(), Utils.oneElem(usChild));
-					List<GrammaticalRelation> g = Utils.combine(pds.getGrs(), Utils.oneElem(usGr));
+					List<Token> t = Utils.combine(pds.getTokens(), ImmutableList.of(usChild));
+					List<GrammaticalRelation> g = Utils.combine(pds.getGrs(), ImmutableList.of(usGr));
 					Twig n = new Twig(g, t, false, profile);
 					dses.add(n);
 				}

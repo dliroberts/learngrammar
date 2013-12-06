@@ -24,6 +24,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * CLAWS2 POS tagset used by the RASP parser.
+ * 
+ * @author duncan.roberts
+ */
 public enum Claws2Pos implements Pos {
 	EXLAMATION(								"!",    "punctuation tag - exclamation mark", PUNCTUATION_GENERAL),
 	QUOTE(									"\"",   "punctuation tag - quotation marks", PUNCTUATION_GENERAL),

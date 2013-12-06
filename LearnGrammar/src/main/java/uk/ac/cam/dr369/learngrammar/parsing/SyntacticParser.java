@@ -7,6 +7,11 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.List;
 
+/**
+ * Determines the grammatical structure of a given input sentence.
+ * @author duncan.roberts
+ *
+ */
 public abstract class SyntacticParser {
 	public abstract List<DependencyStructure> toDependencyStructures(String sentences) throws Exception;
 	

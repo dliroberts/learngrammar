@@ -19,6 +19,11 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringEscapeUtils;
 
 // TODO give file:File field, populated during serialization, so that it can be resaved over the same file.
+
+/**
+ * A set of examples and counter-examples of a grammatical feature from which GrammarQuestion instances can be lifted.
+ * @author duncan.roberts
+ */
 public class LearningTask implements Serializable {
 	private static final long serialVersionUID = 8886215064416364092L;
 
@@ -128,6 +133,7 @@ public class LearningTask implements Serializable {
 		return true;
 	}
 	public void toFile(File file) throws IOException {
+		// TODO surely there's a cleaner way to write XML? This feels dumb.
 		DataOutputStream dos = null;
 		try {
 			StringBuilder sb = new StringBuilder();

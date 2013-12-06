@@ -1,5 +1,11 @@
 package uk.ac.cam.dr369.learngrammar.model;
 
+/**
+ * Logical groupings of proper nouns and the like.
+ *  
+ * @author duncan.roberts
+ *
+ */
 public enum NamedEntityClass {
 	ORGANISATION("I-ORG"), PERSON("I-PER"), LOCATION("I-LOC"),
 	TIME("I-TIM"), DATE("I-DAT"), CURRENCY("I-MON"),

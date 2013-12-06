@@ -1,7 +1,5 @@
 package uk.ac.cam.dr369.learngrammar.semantics;
 
-import static uk.ac.cam.dr369.learngrammar.model.GenericPos.NOUN_PROPER_GENERAL;
-import static uk.ac.cam.dr369.learngrammar.model.NamedEntityClass.PERSON;
 
 import java.io.IOException;
 import java.net.URL;
@@ -11,19 +9,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import simplenlg.lexicon.Lexicon;
 import uk.ac.cam.dr369.learngrammar.model.CandcPtbPos;
 import uk.ac.cam.dr369.learngrammar.model.GenericPos;
-import uk.ac.cam.dr369.learngrammar.model.NamedEntityClass;
 import uk.ac.cam.dr369.learngrammar.model.Pos;
 import uk.ac.cam.dr369.learngrammar.model.Token;
 import uk.ac.cam.dr369.learngrammar.util.Utils;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
 import edu.mit.jwi.Dictionary;
 import edu.mit.jwi.IDictionary;
 import edu.mit.jwi.item.IIndexWord;
@@ -37,7 +37,14 @@ import edu.mit.jwi.item.Pointer;
 import edu.mit.jwi.morph.IStemmer;
 import edu.mit.jwi.morph.WordnetStemmer;
 
+/**
+ * Façade into WordNet.
+ * 
+ * @author duncan.roberts
+ */
 public final class WordnetSemanticAnalyser {
+	private static final Logger LOGGER = LoggerFactory.getLogger(WordnetSemanticAnalyser.class);
+
 	static final Pos[] POS_NON_ING_INF = new Pos[] {
 			CandcPtbPos.VERB_PAST_TENSE, CandcPtbPos.VERB_PAST_PARTICIPLE, CandcPtbPos.VERB_NON_3SG_PRESENT, CandcPtbPos.VERB_3SG_PRESENT};
 	static final Pos[] POS_ING = new Pos[] {CandcPtbPos.VERB_GERUND_OR_PRESENT_PARTICIPLE};
@@ -48,6 +55,7 @@ public final class WordnetSemanticAnalyser {
 	
 	// MIT Java WordNet Interface objects
 	private IDictionary dictionary;
+
 	private IStemmer stemmer;
 	// Aberdeen SimpleNLG objects
 	private Lexicon lexicon;
@@ -60,7 +68,7 @@ public final class WordnetSemanticAnalyser {
 			lexicon = new Lexicon();
 		}
 		catch (IOException ioe) {
-			throw new RuntimeException("Cannot open WordNet dictionary!", ioe);
+			throw new RuntimeException("Cannot open WordNet dictionary!", ioe); // TODO work out why not reported to user. Separate thread?
 		}
 	}
 	
@@ -82,6 +90,10 @@ public final class WordnetSemanticAnalyser {
 		
 		POS wordnetPosTag = toWordnetPosTag(token);
 		return lemmatise(word, wordnetPosTag);
+	}
+	
+	public IDictionary getDictionary() {
+		return dictionary;
 	}
 	
 	private List<String> lemmatise(String word, POS pos) {
@@ -107,9 +119,14 @@ public final class WordnetSemanticAnalyser {
 		
 		if (pos == null)
 			return Arrays.asList(new String[] {word});
-		List<String> words = stemmer.findStems(word, pos);
+		List<String> words = null;
+		try {
+			words = stemmer.findStems(word, pos);
+		} catch (IllegalArgumentException e) {
+			return ImmutableList.of(word);
+		}
 		if (words.isEmpty())
-			return Lists.newArrayList(word);
+			return ImmutableList.of(word);
 		return words;
 	}
 	
@@ -162,7 +179,7 @@ public final class WordnetSemanticAnalyser {
 		List<IWord> appropriateSenses = new ArrayList<IWord>();
 		int x = 0;
 		for (IWord candidateSense : candidates) {
-			System.out.println("Considering whether sense "+x+" has an appropriate verb subcat frame...");
+			LOGGER.debug("Considering whether sense {} has an appropriate verb subcat frame...", x);
 			List<IVerbFrame> synonymVerbFrames = candidateSense.getVerbFrames();
 			Set<String> overlap = getOverlappingVerbFrames(originalVerbFrames, synonymVerbFrames,
 					original.getLemma(), "sense "+x);
@@ -274,59 +291,12 @@ public final class WordnetSemanticAnalyser {
 		
 		for (VerbFrame ovf : originalVerbFrames)
 			originalVfStrs.add(ovf.getDescription());
-		System.out.println("Verb frames matching the usage of "+originalWord+" in the above sentence: "+originalVfStrs);
+		LOGGER.debug("Verb frames matching the usage of {} in the above sentence: {}", originalWord, originalVfStrs);
 		for (IVerbFrame svf : synonymVerbFrames)
 			synonymVfStrs.add(svf.getTemplate());
-		System.out.println("Verb frames for "+replacementWord+": "+synonymVfStrs);
+		LOGGER.debug("Verb frames for {}: {}", replacementWord, synonymVfStrs);
 		Set<String> overlappingVfStrs = Utils.intersection(originalVfStrs, synonymVfStrs);
-		System.out.println("Overlap: "+overlappingVfStrs);
-		System.out.println("---------------");
+		LOGGER.debug("Overlap: {}", overlappingVfStrs);
 		return overlappingVfStrs;
-	}
-	
-	public enum SemanticNounClass {
-		SOMEBODY("animal", "person"), //"animate being", "beast", "brute", "creature", "fauna"),
-		SOMETHING;//("artefact", "plant", "flora", "plant life");
-		
-		private final List<String> wordNetHypernyms;
-		
-		private SemanticNounClass(String... wordNetHypernyms) {
-			this.wordNetHypernyms = ImmutableList.copyOf(wordNetHypernyms);
-		}
-
-		public static SemanticNounClass getSemanticNounClass(Token token) {
-			if (token.pos().descendentOf(NOUN_PROPER_GENERAL)) { // Proper noun, so use named entity recogniser output to identify 'people'
-				NamedEntityClass nec = token.getNamedEntityClass();
-				return PERSON.equals(nec) ? SOMEBODY : SOMETHING;
-			}
-			else if (token.isNoun()) { // if WordNet-able
-				WordnetSemanticAnalyser wnsa = WordnetSemanticAnalyser.getInstance(null);
-				List<IWord> words = wnsa.getWords(token);
-				if (words.isEmpty())
-					return null;
-				IWord word = words.get(0); // taking first word sense for the mo...
-				
-				Queue<ISynsetID> synsetIds = Lists.newLinkedList();
-				ISynset synset = word.getSynset();
-				
-				synsetIds.addAll(synset.getRelatedSynsets(Pointer.HYPERNYM));
-				
-				while (!synsetIds.isEmpty()) {
-					synset = wnsa.dictionary.getSynset(synsetIds.poll());
-					words = synset.getWords();
-					for (IWord w : words) {
-						if (SOMEBODY.wordNetHypernyms.contains(w.getLemma()))
-							return SOMEBODY;
-					}
-					synsetIds.addAll(synset.getRelatedSynsets(Pointer.HYPERNYM));
-				}
-				
-				return SOMETHING;
-			}
-			else if (token.pos().descendentOf(GenericPos.PRONOUN_GENERAL) && !token.getLemma().equals("it")) {
-				return SOMEBODY;
-			}
-			return null;
-		}
 	}
 }

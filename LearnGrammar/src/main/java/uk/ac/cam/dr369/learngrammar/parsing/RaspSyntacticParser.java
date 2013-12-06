@@ -14,6 +14,11 @@ import uk.ac.cam.dr369.learngrammar.model.Token;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.FlagSubtype;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.TokenSubtype;
 
+/**
+ * Façade for RASP syntactic parser. *nix only.
+ * @author duncan.roberts
+ *
+ */
 public class RaspSyntacticParser extends SyntacticParser {
 	/** Should match content of an individual token */
 	private static final Pattern TOKEN_REGEX = Pattern.compile("\\|([^+\\|]+)(?:\\+([^:\\|]*))?:([1-9][0-9]*)_([^\\|]+)\\| ?");

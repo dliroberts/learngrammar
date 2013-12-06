@@ -34,7 +34,7 @@ dependencies {
 
 	// Misc
 	compile group: 'com.google.guava', name: 'guava', version: 'r09'
-	compile group: 'com.beust', name: 'jcommander', version: '1.32' // Command-line parsing
+//	compile group: 'com.beust', name: 'jcommander', version: '1.32' // Command-line parsing
 
 	testCompile group: 'junit', name: 'junit', version: '4.+'
 }

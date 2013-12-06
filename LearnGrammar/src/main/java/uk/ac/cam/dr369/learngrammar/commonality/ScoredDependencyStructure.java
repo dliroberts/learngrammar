@@ -12,6 +12,12 @@ import uk.ac.cam.dr369.learngrammar.parsing.DependencyStructure;
 
 import com.google.common.collect.ImmutableSortedSet;
 
+/**
+ * A sentence with a score assigned according to the degree to which it shares salient features with the example sentences.
+ * 
+ * @author duncan.roberts
+ *
+ */
 public class ScoredDependencyStructure extends DependencyStructure implements Comparable<DependencyStructure> {
 	private static final long serialVersionUID = 1399484231232570153L;
 	private final SortedSet<Score> scores;

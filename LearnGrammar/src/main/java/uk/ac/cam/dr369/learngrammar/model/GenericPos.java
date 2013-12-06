@@ -9,6 +9,12 @@ import java.util.Set;
 
 import uk.ac.cam.dr369.learngrammar.util.UniqueLinkedQueue;
 
+/**
+ * POS tagsets should reference instances of this class as parent tags, so as to form a hierarchy.
+ * 
+ * @author duncan.roberts
+ *
+ */
 public enum GenericPos implements Pos {
 //	TOKEN("token"),
 	

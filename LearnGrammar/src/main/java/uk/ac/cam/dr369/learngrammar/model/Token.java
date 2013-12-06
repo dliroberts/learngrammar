@@ -19,9 +19,9 @@ import com.google.common.collect.Lists;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.Slot;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.Subtype;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.TokenSubtype;
+import uk.ac.cam.dr369.learngrammar.semantics.SemanticNounClass;
 import uk.ac.cam.dr369.learngrammar.semantics.VerbFrame;
 import uk.ac.cam.dr369.learngrammar.semantics.WordnetSemanticAnalyser;
-import uk.ac.cam.dr369.learngrammar.semantics.WordnetSemanticAnalyser.SemanticNounClass;
 import uk.ac.cam.dr369.learngrammar.util.Utils;
 import uk.ac.cam.dr369.learngrammar.util.Utils.VeryCloneable;
 

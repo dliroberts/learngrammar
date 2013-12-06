@@ -3,10 +3,17 @@
  */
 package uk.ac.cam.dr369.learngrammar.commonality;
 
-import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 import uk.ac.cam.dr369.learngrammar.commonality.Commonality.FeatureType;
 
+/**
+ * For every kind of commonality a sentence exhibits with the samples, it's allocated a score instance. Sentences with a high score total are displayed to the user.
+ * Low-scoring sentences are also used as counter-examples.
+ * 
+ * @author duncan.roberts
+ */
 public class Score implements Comparable<Score> {
 	private final String description;
 	private final double value;
@@ -39,13 +46,13 @@ public class Score implements Comparable<Score> {
 	public String description() {
 		return description;
 	}
-	private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.#");
+	private static final NumberFormat DECIMAL_FORMAT = NumberFormat.getNumberInstance(); // I18n can come enseguida...
 	@Override
 	public String toString() {
 		return /*"\n"+*/description+" ("
 			+(expected == null ? "" : "expected: " + expected + "; actual: ")
 			+(actual == null ? "" : actual + "; ")
-			+"strength: "+type.toString().toLowerCase()+"; points: "+Double.valueOf(DECIMAL_FORMAT.format(value))+")";
+			+"strength: "+type.toString().toLowerCase()+"; points: "+DECIMAL_FORMAT.format(value)+")";
 	}
 	@Override
 	public int hashCode() { // Intentionally does not check 'actual', as this would break logic in Commonality.findCoherentWrongAnswers.

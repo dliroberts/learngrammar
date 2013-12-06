@@ -21,8 +21,8 @@ import static uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.Slot.SUBTYP
 import static uk.ac.cam.dr369.learngrammar.semantics.WordnetSemanticAnalyser.POS_INF;
 import static uk.ac.cam.dr369.learngrammar.semantics.WordnetSemanticAnalyser.POS_ING;
 import static uk.ac.cam.dr369.learngrammar.semantics.WordnetSemanticAnalyser.POS_NON_ING_INF;
-import static uk.ac.cam.dr369.learngrammar.semantics.WordnetSemanticAnalyser.SemanticNounClass.SOMEBODY;
-import static uk.ac.cam.dr369.learngrammar.semantics.WordnetSemanticAnalyser.SemanticNounClass.SOMETHING;
+import static uk.ac.cam.dr369.learngrammar.semantics.SemanticNounClass.SOMEBODY;
+import static uk.ac.cam.dr369.learngrammar.semantics.SemanticNounClass.SOMETHING;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,9 +38,14 @@ import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.GrType;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.Slot;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.Subtype;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.TokenSubtype;
-import uk.ac.cam.dr369.learngrammar.semantics.WordnetSemanticAnalyser.SemanticNounClass;
 
 //TODO lock down number - e.g. only one complement perhaps?
+
+/**
+ * WordNet's implementation of verb frames.
+ * @author duncan.roberts
+ *
+ */
 public enum WordnetVerbFrame implements VerbFrame {
 	SOMETHING_VERBS_1(
 			"Something ----s",

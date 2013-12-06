@@ -8,6 +8,12 @@ import java.util.List;
 
 import uk.ac.cam.dr369.learngrammar.util.Utils;
 
+/**
+ * We consider combinations of grammatical features that co-exist in some sub-graph of the input sentences: e.g. POS tag + lemma. However, the graph is too large to be
+ * explored comprehensively, so the permutations of features we consider together are narrowed down into pre-defined 'feature profiles'.
+ * 
+ * @author duncan.roberts
+ */
 public class FeatureProfile {
 	private final boolean lemmas;
 	private final boolean posTags;
@@ -131,40 +137,4 @@ public class FeatureProfile {
 	public String toString() {
 		return desc;
 	}
-//	public boolean subsumes(FeatureProfile o) {
-//		boolean thisSubsumes = false;
-//		boolean otherSubsumes = false;
-//		
-//		if (lemmas && !o.lemmas)
-//			thisSubsumes = true;
-//		else if (!lemmas && o.lemmas)
-//			otherSubsumes = true;
-//		
-//		if (grTypes && !o.grTypes)
-//			thisSubsumes = true;
-//		else if (!grTypes && o.grTypes)
-//			otherSubsumes = true;
-//		
-//		if (supertags && !o.supertags)
-//			thisSubsumes = true;
-//		else if (!supertags && o.supertags)
-//			otherSubsumes = true;
-//		
-//		if (posTags && !o.posTags)
-//			thisSubsumes = true;
-//		else if (!posTags && o.posTags)
-//			otherSubsumes = true;
-//
-//		if (recurseHierarchy && !o.recurseHierarchy)
-//			thisSubsumes = true;
-//		else if (!recurseHierarchy && o.recurseHierarchy)
-//			otherSubsumes = true;
-//		
-//		if (maxHeight > o.maxHeight)
-//			thisSubsumes = true;
-//		else if (maxHeight < o.maxHeight)
-//			otherSubsumes = true;
-//		
-//		return thisSubsumes && !otherSubsumes;
-//	}
 }

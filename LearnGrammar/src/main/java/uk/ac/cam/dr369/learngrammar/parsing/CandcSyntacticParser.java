@@ -1,10 +1,8 @@
 package uk.ac.cam.dr369.learngrammar.parsing;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -21,16 +19,26 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import uk.ac.cam.dr369.learngrammar.model.CandcPtbPos;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation;
-import uk.ac.cam.dr369.learngrammar.model.NamedEntityClass;
-import uk.ac.cam.dr369.learngrammar.model.Token;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.FlagSubtype;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.Subtype;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.TokenSubtype;
+import uk.ac.cam.dr369.learngrammar.model.NamedEntityClass;
+import uk.ac.cam.dr369.learngrammar.model.Token;
 import uk.ac.cam.dr369.learngrammar.util.Utils;
 
+/**
+ * Façade into the C&amp;C syntactic parser. Can interact with either the (*nix-only) command-line tool, or a webservice.
+ * @author duncan.roberts
+ *
+ */
 public class CandcSyntacticParser extends SyntacticParser {
+	private static final Logger LOGGER = LoggerFactory.getLogger(CandcSyntacticParser.class);
+
 	private static final String CANDC_WS_URL = "http://svn.ask.it.usyd.edu.au/demo/demo2.cgi?printer=grs&sentence=";
 	//I|I|PRP|I-NP|O|NP - example from server.
 	//I|PRP|NP - example from local copy.
@@ -85,12 +93,12 @@ public class CandcSyntacticParser extends SyntacticParser {
 		try {
 			InputStream is = getInputStream(grSerializedFile);
 			ois = new ObjectInputStream(is);
-			System.out.println("Reading from "+grSerializedFile+"...");
+			LOGGER.info("Reading from "+grSerializedFile+"...");
 			Object o = ois.readObject();
-			System.out.println("Read object from "+grSerializedFile+". Size: "+grSerializedFile.length());
+			LOGGER.info("Read object from "+grSerializedFile+". Size: "+grSerializedFile.length());
 			return (Set<DependencyStructure>) o;
 		} catch (ClassNotFoundException e) {
-			throw new IOException();
+			throw new IOException("Unable to load serialised C&C corpus file.", e);
 		}
 		finally {
 			if (ois != null)
@@ -100,8 +108,16 @@ public class CandcSyntacticParser extends SyntacticParser {
 	/** Returns size of file itself, or if zipped, size of sole file inside zip after inflation. */
 	private static long getFileSize(File file) throws IOException {
 		if (file.getName().endsWith(".gz") || file.getName().endsWith(".zip")) {
-		    ZipFile zf = new ZipFile(file); // assumes single file in archive
-			return zf.entries().nextElement().getSize();
+		    ZipFile zf = null;
+		    try {
+		    	zf = new ZipFile(file); // assumes single file in archive
+		    	return zf.entries().nextElement().getSize();
+		    }
+		    finally {
+		    	if (zf != null) {
+		    		zf.close();
+		    	}
+		    }
 		}
 		else {
 			return file.length();
@@ -109,16 +125,24 @@ public class CandcSyntacticParser extends SyntacticParser {
 	}
 	private static InputStream getInputStream(File file) throws IOException {
 		if (file.getName().endsWith(".gz") || file.getName().endsWith(".zip")) {
-		    System.out.println("Opening zipped file...");
-			ZipFile zf = new ZipFile(file); // assumes single file in archive
-			return zf.getInputStream(zf.entries().nextElement());
+		    LOGGER.info("Opening zipped file...");
+			ZipFile zf = null;
+			try {
+				zf = new ZipFile(file); // assumes single file in archive
+				return zf.getInputStream(zf.entries().nextElement());
+			}
+		    finally {
+		    	if (zf != null) {
+		    		zf.close();
+		    	}
+		    }
 		}
 		else {
 			return new FileInputStream(file);
 		}
 	}
 	private Collection<DependencyStructure> loadCorpusFromCandcOutputFile(File grArchive, Integer maxSentences) throws IOException {
-		System.out.println("Single C&C output file.");
+		LOGGER.info("Single C&C output file.");
 //		long fileSize = getFileSize(grArchive);
 		int fileSize = (int) getFileSize(grArchive);
 		// Average bytes per sentence in file: 337. A big sentence (13 tokens) is about 467.
@@ -233,20 +257,20 @@ public class CandcSyntacticParser extends SyntacticParser {
 		return dses;
 	}
 	
-	private static void outfile(StringBuilder grStr, String line, int maxWords, String name) {
-		try {
-			FileWriter fstream = new FileWriter(
-					"/home/dliroberts/Documenti/LearnGrammar/working-area/GR/1file/grLenSubsetAll/"+name+"-"+maxWords+"wds.gr", true);
-	        BufferedWriter out = new BufferedWriter(fstream);
-		    if (grStr != null)
-		    	out.write(grStr.toString());
-		    out.write(line);
-		    out.write(grStr == null ? "\n" : "\n\n");
-		    out.close();
-	    } catch (Exception e){ // Catch exception if any
-	    	System.err.println("Error: " + e.getMessage());
-	    }
-	}
+//	private static void outfile(StringBuilder grStr, String line, int maxWords, String name) {
+//		try {
+//			FileWriter fstream = new FileWriter(
+//					"/home/dliroberts/Documenti/LearnGrammar/working-area/GR/1file/grLenSubsetAll/"+name+"-"+maxWords+"wds.gr", true);
+//	        BufferedWriter out = new BufferedWriter(fstream);
+//		    if (grStr != null)
+//		    	out.write(grStr.toString());
+//		    out.write(line);
+//		    out.write(grStr == null ? "\n" : "\n\n");
+//		    out.close();
+//	    } catch (Exception e){ // Catch exception if any
+//	    	System.err.println("Error: " + e.getMessage());
+//	    }
+//	}
 	
 	private static DependencyStructure toDependencyStructure(String grStr, String tokensStr) {
 		if (tokensStr == null)

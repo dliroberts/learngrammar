@@ -9,6 +9,13 @@ import uk.ac.cam.dr369.learngrammar.model.Token;
  * @author duncan.roberts
  */
 public interface VerbFrame extends Serializable {
+	/**
+	 * Determines whether the verb argument conforms to this verb frame.
+	 */
 	public boolean accept(Token verb);
+	
+	/**
+	 * Human-readable description of the verb frame.
+	 */
 	public String getDescription();
 }

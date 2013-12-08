@@ -60,7 +60,7 @@ public class CandcSyntacticParser extends SyntacticParser {
 				.replace('\u201c', '"').replace('\u201d', '"'); // double left/right quotes
 		
 		String tokenised = Utils.tokenise(sentence);
-		String output = webservice ? callWebservice(CANDC_WS_URL, tokenised) : runScript("./candc.sh", sentence);
+		String output = webservice ? Utils.callWebservice(CANDC_WS_URL, tokenised) : Utils.runScript("./candc.sh", sentence);
 		return getDependencyStructure(output);
 	}
 

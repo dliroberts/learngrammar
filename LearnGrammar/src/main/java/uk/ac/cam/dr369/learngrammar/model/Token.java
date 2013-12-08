@@ -3,8 +3,10 @@ package uk.ac.cam.dr369.learngrammar.model;
 import static uk.ac.cam.dr369.learngrammar.model.GenericPos.ADJECTIVE_GENERAL;
 import static uk.ac.cam.dr369.learngrammar.model.GenericPos.ADVERB_GENERAL;
 import static uk.ac.cam.dr369.learngrammar.model.GenericPos.NOUN_GENERAL;
+import static uk.ac.cam.dr369.learngrammar.model.GenericPos.NOUN_PROPER_GENERAL;
 import static uk.ac.cam.dr369.learngrammar.model.GenericPos.VERB_GENERAL;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -25,7 +27,9 @@ import uk.ac.cam.dr369.learngrammar.semantics.WordnetSemanticAnalyser;
 import uk.ac.cam.dr369.learngrammar.util.Utils;
 import uk.ac.cam.dr369.learngrammar.util.Utils.VeryCloneable;
 
-public class Token implements VeryCloneable<Token>, Comparable<Token> {
+public class Token implements VeryCloneable<Token>, Comparable<Token>, Serializable {
+	private static final long serialVersionUID = -1303112268519064221L;
+
 	private static WordnetSemanticAnalyser semanticAnalyser;
 	
 	private final String lemma;
@@ -59,7 +63,7 @@ public class Token implements VeryCloneable<Token>, Comparable<Token> {
 		attached = false;
 		if (semanticAnalyser == null)
 			semanticAnalyser = WordnetSemanticAnalyser.getInstance(null);
-		this.lemma = lemma == null && index >= 0 ? semanticAnalyser.firstLemma(this) : lemma; // index<0: special null token
+		this.lemma = lemma == null && index >= 0 ? semanticAnalyser.lemmatise(this).get(0) : lemma; // index<0: special null token
 		this.verbFrame = verbFrame;
 	}
 	private Token(String lemma, String suffix, int index, Pos posTag, String supertag, String word, boolean attached) {
@@ -507,9 +511,13 @@ public class Token implements VeryCloneable<Token>, Comparable<Token> {
 	public boolean isAdverb() {
 		return posTag.descendentOf(ADVERB_GENERAL);
 	}
-	
+
 	public boolean isNoun() {
 		return posTag.descendentOf(NOUN_GENERAL);
+	}
+	
+	public boolean isProperNoun() {
+		return posTag.descendentOf(NOUN_PROPER_GENERAL);
 	}
 	
 	public boolean isOpenClass() {

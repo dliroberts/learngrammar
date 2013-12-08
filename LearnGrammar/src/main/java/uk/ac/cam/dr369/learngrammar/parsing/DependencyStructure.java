@@ -17,6 +17,7 @@ import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.TokenSubtype;
 import uk.ac.cam.dr369.learngrammar.util.Utils;
 import uk.ac.cam.dr369.learngrammar.util.Utils.VeryCloneable;
 
+/** Parsed representation of a sentence. */
 public class DependencyStructure implements Comparable<DependencyStructure>, VeryCloneable<DependencyStructure>, Serializable {
 	private static final long serialVersionUID = -5058097886775902483L;
 	private final List<GrammaticalRelation> grs;
@@ -196,6 +197,33 @@ public class DependencyStructure implements Comparable<DependencyStructure>, Ver
 	private static boolean equalsExceptIndex(Token old, Token updated, int expectedIndex) {
 		return new Token(old.getLemma(), old.getSuffix(), expectedIndex, old.pos(), old.getSupertag(), old.getWord()).equals(updated);
 	}
+
+	public SortedSet<Token> findDependencySubset(String word, String gr) {
+		for (Token tok : getTokens()) {
+			if (tok.getWord().equals(word)) {
+				for (GrammaticalRelation grel : tok.getGrs()) {
+					if (grel.type().getLabel().equals(gr)) {
+						return grel.getDependentTokens(true);
+					}
+				}
+			}
+		}
+		throw new IllegalArgumentException("Unable to find " + word + ">" + gr + " for " + this);
+	}
+	
+	public DependencyStructure replaceStructure(String word, String gr, GrammaticalRelation toGr) {
+		for (Token tok : getTokens()) {
+			if (tok.getWord().equals(word)) {
+				for (GrammaticalRelation fromGr : tok.getGrs()) {
+					if (fromGr.type().getLabel().equals(gr)) {
+						return substitute(fromGr, toGr);
+					}
+				}
+			}
+		}
+		throw new IllegalArgumentException("Unable to find " + word + ">" + gr + " for " + this);
+	}
+	
 	public DependencyStructure substitute(Token from, Token to) {
 		to = new Token(to.getLemma(), to.getSuffix(), from.getIndex(), to.pos(), to.getSupertag(), to.getWord()); // note that index comes from 'from' not 'to'
 		List<Token> tokens = getTokens();

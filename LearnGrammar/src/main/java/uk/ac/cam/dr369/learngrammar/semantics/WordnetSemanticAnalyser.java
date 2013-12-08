@@ -22,6 +22,9 @@ import uk.ac.cam.dr369.learngrammar.model.Token;
 import uk.ac.cam.dr369.learngrammar.util.Utils;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableTable;
 import com.google.common.collect.Lists;
 
 import edu.mit.jwi.Dictionary;
@@ -45,11 +48,33 @@ import edu.mit.jwi.morph.WordnetStemmer;
 public final class WordnetSemanticAnalyser {
 	private static final Logger LOGGER = LoggerFactory.getLogger(WordnetSemanticAnalyser.class);
 
-	static final Pos[] POS_NON_ING_INF = new Pos[] {
-			CandcPtbPos.VERB_PAST_TENSE, CandcPtbPos.VERB_PAST_PARTICIPLE, CandcPtbPos.VERB_NON_3SG_PRESENT, CandcPtbPos.VERB_3SG_PRESENT};
-	static final Pos[] POS_ING = new Pos[] {CandcPtbPos.VERB_GERUND_OR_PRESENT_PARTICIPLE};
-	static final Pos[] POS_INF = new Pos[] {CandcPtbPos.VERB_BASE_FORM};
-	static final Pos[] POS_NP = new Pos[] {GenericPos.ARGUMENT_GENERAL};
+	private static final ImmutableMap<String,String> STEMMER = new ImmutableMap.Builder<String,String>()
+			.put("'ll", "will") // I'll
+			.put("n't", "not") // couldn't
+			.put("'re", "be") // we're
+			.put("'ve", "have") // I've
+			.put("'s", "be") // it's
+			.put("'m", "be") // I'm
+			.put("an", "a")
+			.build();
+
+	private static final ImmutableTable<String,Pos,String> POS_STEMMER = new ImmutableTable.Builder<String,Pos,String>()
+			.put("'d", CandcPtbPos.VERB_PAST_TENSE, "had")
+			.put("'d", CandcPtbPos.MODAL, "would")
+			.build();
+
+	// TODO work out means of disassociating this class from C&C/any other specific tagset. Maybe somehow reference the generic 'superclass' tags?
+	static final ImmutableSet<? extends Pos> POS_NON_ING_INF = ImmutableSet.of(
+			CandcPtbPos.VERB_PAST_TENSE,
+			CandcPtbPos.VERB_PAST_PARTICIPLE,
+			CandcPtbPos.VERB_NON_3SG_PRESENT,
+			CandcPtbPos.VERB_3SG_PRESENT);
+	
+	static final ImmutableSet<? extends Pos> POS_ING = ImmutableSet.of(CandcPtbPos.VERB_GERUND_OR_PRESENT_PARTICIPLE);
+	
+	static final ImmutableSet<? extends Pos> POS_INF = ImmutableSet.of(CandcPtbPos.VERB_BASE_FORM);
+	
+	static final ImmutableSet<? extends Pos> POS_NP = ImmutableSet.of(GenericPos.ARGUMENT_GENERAL);
 
 	private static WordnetSemanticAnalyser INSTANCE = null;
 	
@@ -78,7 +103,14 @@ public final class WordnetSemanticAnalyser {
 		}
 		return INSTANCE;
 	}
+
+	public IDictionary getDictionary() {
+		return dictionary;
+	}
 	
+	/**
+	 * Find base form of a word - e.g. 'thought' becomes 'think', 'mice' becomes 'mouse', 'cows' becomes 'cow'.
+	 */
 	public List<String> lemmatise(Token token) {
 		if (token.getLemma() != null)
 			return Arrays.asList(new String[] {token.getLemma()});
@@ -92,61 +124,32 @@ public final class WordnetSemanticAnalyser {
 		return lemmatise(word, wordnetPosTag);
 	}
 	
-	public IDictionary getDictionary() {
-		return dictionary;
-	}
-	
+	/**
+	 * Find base form of a word - e.g. 'thought' becomes 'think', 'mice' becomes 'mouse', 'cows' becomes 'cow'.
+	 */
 	private List<String> lemmatise(String word, POS pos) {
 		// The stemmer doesn't stem common apostrophe-abbreviated words, like 'll -> will. So manual hackery:
-		if (word.equals("'ll")) // I'll
-			return Arrays.asList(new String[] {"will"});
-		if (word.equals("n't")) // couldn't
-			return Arrays.asList(new String[] {"not"});
-		if (word.equals("'re")) // we're
-			return Arrays.asList(new String[] {"be"});
-		if (word.equals("'ve")) // I've
-			return Arrays.asList(new String[] {"have"});
-		if (word.equals("'s")) // it's
-			return Arrays.asList(new String[] {"be"});
-		if (word.equals("'m")) // I'm
-			return Arrays.asList(new String[] {"be"});
-		if (word.equals("an"))
-			return Arrays.asList(new String[] {"a"});
-		if (word.equals("'d") && pos.equals(CandcPtbPos.VERB_PAST_TENSE))
-			return Arrays.asList(new String[] {"had"});
-		if (word.equals("'d") && pos.equals(CandcPtbPos.MODAL))
-			return Arrays.asList(new String[] {"would"});
-		
+		if (POS_STEMMER.contains(word, pos))
+			return ImmutableList.of(POS_STEMMER.get(word, pos));
+		if (STEMMER.containsKey(word))
+			return ImmutableList.of(STEMMER.get(word));
 		if (pos == null)
-			return Arrays.asList(new String[] {word});
+			return ImmutableList.of(word);
+		
 		List<String> words = null;
 		try {
 			words = stemmer.findStems(word, pos);
 		} catch (IllegalArgumentException e) {
 			return ImmutableList.of(word);
 		}
-		if (words.isEmpty())
+		if (words.isEmpty()) // no lemma found, so fall back to unlemmatised word
 			return ImmutableList.of(word);
 		return words;
 	}
-	
-	public String firstLemma(Token token) {
-		List<String> lemmas = lemmatise(token);
-		String lemma = lemmas.size() > 0 ? lemmas.get(0) : token.getWord();
 		
-		if (!token.pos().descendentOf(GenericPos.NOUN_PROPER_GENERAL)) { // if not a proper noun, let's throw away case information for the lemma
-			lemma = lemma.toLowerCase();
-		}
-		return lemma;
-	}
-
-	private String firstLemma(String word, POS pos) {
-		return lemmatise(word, pos).get(0);
-	}
-	
 	public List<IWord> getWords(Token token) {
 		POS pos = toWordnetPosTag(token);
-		IIndexWord idxWord = dictionary.getIndexWord(firstLemma(token.getWord(), pos), pos);
+		IIndexWord idxWord = dictionary.getIndexWord(lemmatise(token.getWord(), pos).get(0), pos);
 		List<IWord> words = new ArrayList<IWord>();
 		if (idxWord == null)
 			return Lists.newArrayList();
@@ -286,8 +289,8 @@ public final class WordnetSemanticAnalyser {
 	
 	private Set<String> getOverlappingVerbFrames(Set<VerbFrame> originalVerbFrames, List<IVerbFrame> synonymVerbFrames,
 			String originalWord, String replacementWord) {
-		List<String> originalVfStrs = new ArrayList<String>();
-		List<String> synonymVfStrs = new ArrayList<String>();
+		List<String> originalVfStrs = Lists.newArrayList();
+		List<String> synonymVfStrs = Lists.newArrayList();
 		
 		for (VerbFrame ovf : originalVerbFrames)
 			originalVfStrs.add(ovf.getDescription());

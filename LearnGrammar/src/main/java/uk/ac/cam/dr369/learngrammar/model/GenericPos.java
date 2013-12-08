@@ -78,7 +78,7 @@ public enum GenericPos implements Pos {
 		Queue<Pos> toSearch = new UniqueLinkedQueue<Pos>();
 		toSearch.offer(child);
 		Pos current = null;
-		do {
+		do { // TODO junit this properly. does this work ok if there's a cycle?
 			current = toSearch.poll();
 			if (current.equals(parent))
 				return true;

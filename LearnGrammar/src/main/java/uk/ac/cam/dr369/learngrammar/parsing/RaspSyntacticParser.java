@@ -13,6 +13,7 @@ import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation;
 import uk.ac.cam.dr369.learngrammar.model.Token;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.FlagSubtype;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.TokenSubtype;
+import uk.ac.cam.dr369.learngrammar.util.Utils;
 
 /**
  * Façade for RASP syntactic parser. *nix only.
@@ -31,15 +32,15 @@ public class RaspSyntacticParser extends SyntacticParser {
 		sentences = sentences.replace('\u2018', '\'').replace('\u2019', '\'') // single left/right quotes
 			.replace('\u201c', '"').replace('\u201d', '"'); // double left/right quotes
 		
-		String parse = runScript("./rasp.sh", sentences);
-		String tokenised = runScript("./tok_rasp.sh", sentences);
+		String parse = Utils.runScript("./rasp.sh", sentences);
+		String tokenised = Utils.runScript("./tok_rasp.sh", sentences);
 		return getDependencyStructure(parse, tokenised);
 	}
 	
 	public List<DependencyStructure> toDependencyStructures(String sentences) throws Exception {
 		sentences = sentences.replace('\n', ' ');
-		String parse = runScript("./rasp.sh", sentences);
-		String tokenised = runScript("./tok_rasp.sh", sentences);
+		String parse = Utils.runScript("./rasp.sh", sentences);
+		String tokenised = Utils.runScript("./tok_rasp.sh", sentences);
 		return getDependencyStructures(parse, tokenised);
 	}
 	

@@ -4,7 +4,6 @@
 package uk.ac.cam.dr369.learngrammar.commonality;
 
 import java.text.NumberFormat;
-import java.util.Locale;
 
 import uk.ac.cam.dr369.learngrammar.commonality.Commonality.FeatureType;
 

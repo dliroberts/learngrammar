@@ -19,7 +19,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -37,8 +36,6 @@ public class Utils {
 	/** For convenience */
 	public static final String NEWLINE = System.getProperty("line.separator");
 	
-	private static final Properties PROPERTIES = new Properties();
-	
 	private static final List<String> COMMON_TOKENISER_MAP_TOK = Lists.newArrayList();
 	private static final List<String> COMMON_TOKENISER_MAP_DETOK = Lists.newArrayList();
 	private static final List<String> TOKENISER_MAP_TOK = Lists.newArrayList();
@@ -47,12 +44,6 @@ public class Utils {
 	private static final List<String> DETOKENISER_MAP_DETOK = Lists.newArrayList();
 	
 	static {
-		try {
-			PROPERTIES.load(Utils.class.getClassLoader().getResourceAsStream(("LearnGrammar.properties")));
-		} catch (IOException e) {
-			throw new RuntimeException("Unable to load properties file.", e);
-		}
-		
 		COMMON_TOKENISER_MAP_TOK.add(" -LRB- "); COMMON_TOKENISER_MAP_DETOK.add(" (");
 		COMMON_TOKENISER_MAP_TOK.add(" -RRB- "); COMMON_TOKENISER_MAP_DETOK.add("); ");
 		COMMON_TOKENISER_MAP_TOK.add(" -LSB- "); COMMON_TOKENISER_MAP_DETOK.add(" [");
@@ -427,6 +418,7 @@ public class Utils {
 		}
 		return grTypes;
 	}
+	
 	public static void unzip(ZipFile zipFile, File extractTo) {
 		try {
 			for (Enumeration<? extends ZipEntry> en = zipFile.entries(); en.hasMoreElements();) {
@@ -463,33 +455,35 @@ public class Utils {
 		}
 	}
 	
-	public static String getProperty(String key) {
-		return PROPERTIES.getProperty(key);
-	}
-	public static String runScript(String script, String input) throws Exception {
-			// FIXME massive exploit in code below; should sanitise input before running to avoid arbitrary code exec
-			String[] parseTask = new String[] {"/bin/bash", script, input};
-			Process process = Runtime.getRuntime().exec(parseTask);
+	public static String runScript(String script, String input) throws IOException {
+		// FIXME massive exploit in code below; should sanitise input before running to avoid arbitrary code exec
+		String[] parseTask = new String[] {"/bin/bash", script, input};
+		Process process = Runtime.getRuntime().exec(parseTask);
+		try {
 			if(process.waitFor() != 0)
 				throw new IllegalStateException("WaitFor != 0");
-			if(process.exitValue() != 0)
-				throw new IllegalStateException("ExitCode != 0");
-			
-			String line;
-	//		BufferedReader es = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-	//		if ((line = es.readLine()) != null) {
-	//			throw new IllegalStateException("Error: "+line);
-	//		}
-			BufferedReader os = new BufferedReader(new InputStreamReader(process.getInputStream()));
-			
-			StringBuilder out = new StringBuilder();
-			for (line = null; (line = os.readLine()) != null;) {
-				out.append(line);
-				out.append('\n');
-			}
-			return out.toString();
+		} catch (InterruptedException e) {
+			throw new RuntimeException("Error running parsing script "+script+" for input "+input, e);
 		}
-	public static String callWebservice(String urlPrefix, String sentence) throws Exception {
+		if(process.exitValue() != 0)
+			throw new IllegalStateException("ExitCode != 0");
+		
+		String line;
+//		BufferedReader es = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+//		if ((line = es.readLine()) != null) {
+//			throw new IllegalStateException("Error: "+line);
+//		}
+		BufferedReader os = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		
+		StringBuilder out = new StringBuilder();
+		for (line = null; (line = os.readLine()) != null;) {
+			out.append(line);
+			out.append('\n');
+		}
+		return out.toString();
+	}
+	
+	public static String callWebservice(String urlPrefix, String sentence) throws IOException {
 		String sentenceEnc = URLEncoder.encode(sentence, "UTF-8");
 		
 		URL url = new URL(urlPrefix + sentenceEnc);
@@ -515,5 +509,10 @@ public class Utils {
 				rd.close();
 		}
 		return sb.toString();
+	}
+	
+	public static String asciiify(String text) {
+		return text.replace('\u2018', '\'').replace('\u2019', '\'') // single left/right quotes
+				.replace('\u201c', '"').replace('\u201d', '"'); // double left/right quotes
 	}
 }

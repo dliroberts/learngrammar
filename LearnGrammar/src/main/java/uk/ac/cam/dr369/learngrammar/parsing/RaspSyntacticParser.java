@@ -1,7 +1,9 @@
 package uk.ac.cam.dr369.learngrammar.parsing;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,9 +20,8 @@ import uk.ac.cam.dr369.learngrammar.util.Utils;
 /**
  * Façade for RASP syntactic parser. *nix only.
  * @author duncan.roberts
- *
  */
-public class RaspSyntacticParser extends SyntacticParser {
+public class RaspSyntacticParser implements SyntacticParser {
 	/** Should match content of an individual token */
 	private static final Pattern TOKEN_REGEX = Pattern.compile("\\|([^+\\|]+)(?:\\+([^:\\|]*))?:([1-9][0-9]*)_([^\\|]+)\\| ?");
 	
@@ -28,7 +29,15 @@ public class RaspSyntacticParser extends SyntacticParser {
 	private static final Pattern GR_REGEX =         Pattern.compile("\\(\\|([^\\|]+)\\|(?: (\\|[^ \\|:_]+\\||_|\\|[^ \\|:_]+:[0-9]+_[^\\|]+\\|))? \\|([^\\|]+)\\| \\|([^\\|]+)\\|(?: ([^ ]+))?\\)");
 	private static final Pattern PASSIVE_GR_REGEX = Pattern.compile("\\(\\|passive\\| " +                                                        "\\|([^\\|]+)\\|" +                         "\\)");
 
-	public DependencyStructure toDependencyStructure(String sentences) throws Exception {
+	private static RaspSyntacticParser instance;
+
+	public static RaspSyntacticParser getInstance() {
+		if (instance == null)
+			instance = new RaspSyntacticParser();
+		return instance;
+	}
+
+	public DependencyStructure toDependencyStructure(String sentences) throws IOException {
 		sentences = sentences.replace('\u2018', '\'').replace('\u2019', '\'') // single left/right quotes
 			.replace('\u201c', '"').replace('\u201d', '"'); // double left/right quotes
 		
@@ -37,7 +46,7 @@ public class RaspSyntacticParser extends SyntacticParser {
 		return getDependencyStructure(parse, tokenised);
 	}
 	
-	public List<DependencyStructure> toDependencyStructures(String sentences) throws Exception {
+	public List<DependencyStructure> toDependencyStructures(String sentences) throws IOException {
 		sentences = sentences.replace('\n', ' ');
 		String parse = Utils.runScript("./rasp.sh", sentences);
 		String tokenised = Utils.runScript("./tok_rasp.sh", sentences);
@@ -147,5 +156,15 @@ public class RaspSyntacticParser extends SyntacticParser {
 			}
 			return new GrammaticalRelation(GrammaticalRelation.GrType.valueOfByLabel(type), subtype, initialGrValue, tokens.get(headStr), tokens.get(dependentStr));
 		}
+	}
+
+	@Override
+	public boolean useCorpus() {
+		return false; // not currently supported. I think a RASP-parseable corpus is out there though... Brown corpus?
+	}
+
+	@Override
+	public Collection<DependencyStructure> getCorpus() {
+		throw new IllegalStateException("No corpus available for RASP parser.");
 	}
 }

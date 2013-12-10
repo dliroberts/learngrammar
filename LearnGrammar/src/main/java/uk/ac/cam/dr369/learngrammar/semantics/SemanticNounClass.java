@@ -47,7 +47,7 @@ public enum SemanticNounClass {
 	}
 
 	private static SemanticNounClass getCommonNounClass(Token token) {
-		WordnetSemanticAnalyser wnsa = WordnetSemanticAnalyser.getInstance(null);
+		WordnetSemanticAnalyser wnsa = WordnetSemanticAnalyser.getInstance();
 		List<IWord> words = wnsa.getWords(token);
 		if (words.isEmpty())
 			return null;

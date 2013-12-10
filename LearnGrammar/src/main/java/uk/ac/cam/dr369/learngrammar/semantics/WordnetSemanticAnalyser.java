@@ -2,7 +2,6 @@ package uk.ac.cam.dr369.learngrammar.semantics;
 
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,6 +18,7 @@ import uk.ac.cam.dr369.learngrammar.model.CandcPtbPos;
 import uk.ac.cam.dr369.learngrammar.model.GenericPos;
 import uk.ac.cam.dr369.learngrammar.model.Pos;
 import uk.ac.cam.dr369.learngrammar.model.Token;
+import uk.ac.cam.dr369.learngrammar.util.PropertiesFacade;
 import uk.ac.cam.dr369.learngrammar.util.Utils;
 
 import com.google.common.collect.ImmutableList;
@@ -85,8 +85,8 @@ public final class WordnetSemanticAnalyser {
 	// Aberdeen SimpleNLG objects
 	private Lexicon lexicon;
 	
-	private WordnetSemanticAnalyser(URL dict) {
-		dictionary = new Dictionary(dict);
+	private WordnetSemanticAnalyser() {
+		dictionary = new Dictionary(PropertiesFacade.getInstance().getWordnetDictionaryUrl());
 		try {
 			dictionary.open();
 			stemmer = new WordnetStemmer(dictionary);
@@ -97,9 +97,9 @@ public final class WordnetSemanticAnalyser {
 		}
 	}
 	
-	public static WordnetSemanticAnalyser getInstance(URL dictionary) {
+	public static WordnetSemanticAnalyser getInstance() {
 		if (INSTANCE == null) {
-			INSTANCE = new WordnetSemanticAnalyser(dictionary);
+			INSTANCE = new WordnetSemanticAnalyser();
 		}
 		return INSTANCE;
 	}

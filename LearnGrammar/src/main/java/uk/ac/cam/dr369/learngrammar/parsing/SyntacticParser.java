@@ -1,14 +1,19 @@
 package uk.ac.cam.dr369.learngrammar.parsing;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * Determines the grammatical structure of a given input sentence.
  * @author duncan.roberts
- *
  */
-public abstract class SyntacticParser {
-	public abstract List<DependencyStructure> toDependencyStructures(String sentences) throws Exception;
+public interface SyntacticParser {
+	public List<DependencyStructure> toDependencyStructures(String sentences) throws IOException;
 	
-	public abstract DependencyStructure toDependencyStructure(String sentence) throws Exception;
+	public DependencyStructure toDependencyStructure(String sentence) throws IOException;
+	
+	public boolean useCorpus();
+	
+	public Collection<DependencyStructure> getCorpus() throws IOException;
 }

@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -15,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipFile;
@@ -29,17 +34,19 @@ import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.Subtype;
 import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.TokenSubtype;
 import uk.ac.cam.dr369.learngrammar.model.NamedEntityClass;
 import uk.ac.cam.dr369.learngrammar.model.Token;
+import uk.ac.cam.dr369.learngrammar.util.PropertiesFacade;
 import uk.ac.cam.dr369.learngrammar.util.Utils;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * Façade into the C&amp;C syntactic parser. Can interact with either the (*nix-only) command-line tool, or a webservice.
  * @author duncan.roberts
  *
  */
-public class CandcSyntacticParser extends SyntacticParser {
+public class CandcSyntacticParser implements SyntacticParser {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CandcSyntacticParser.class);
 
-	private static final String CANDC_WS_URL = "http://svn.ask.it.usyd.edu.au/demo/demo2.cgi?printer=grs&sentence=";
 	//I|I|PRP|I-NP|O|NP - example from server.
 	//I|PRP|NP - example from local copy.
 	//                                                          lex.item_      lemma_____    POS______      phraseType       named_enty    Supertag_
@@ -49,22 +56,49 @@ public class CandcSyntacticParser extends SyntacticParser {
 	//                                                         (TYPE________    SUBTYPE___________________ HEAD___________ DEPENDENT______    INITIAL______  )
 	private static final Pattern GR_REGEX = Pattern.compile("\\(+([a-z0-9]+)(?: ([^ _]+_[0-9]+|_|[a-z]+))? ([^ _]+_[0-9]+) ([^ _]+_[0-9]+)(?: ([^ _)]+|_))?\\)");
 	
-	private boolean webservice;
+	private Collection<DependencyStructure> corpusDeps;
 	
-	public CandcSyntacticParser(boolean webservice) {
-		this.webservice = webservice;
+	private PropertiesFacade prop = PropertiesFacade.getInstance();
+
+	private Future<Collection<DependencyStructure>> corpusLoadFuture;
+	
+	private static CandcSyntacticParser instance;
+	
+	public static CandcSyntacticParser getInstance() {
+		if (instance == null)
+			instance = new CandcSyntacticParser();
+		return instance;
 	}
 	
-	public DependencyStructure toDependencyStructure(String sentence) throws Exception {
-		sentence = sentence.replace('\u2018', '\'').replace('\u2019', '\'') // single left/right quotes
-				.replace('\u201c', '"').replace('\u201d', '"'); // double left/right quotes
+	private CandcSyntacticParser() {
+		if (prop.isCandcCorpusEnabled()) {
+			corpusLoadFuture = Executors.newSingleThreadExecutor().submit(
+					new Callable<Collection<DependencyStructure>>() {
+				@Override
+				public Collection<DependencyStructure> call() throws Exception {
+					long start = new Date().getTime();
+					File corpusFile = prop.getCorpus();
+					Collection<DependencyStructure> corpusDeps = loadCorpus(corpusFile, prop.getMaxCorpusLines());
+					LOGGER.info("{} sentences loaded from corpus file {}.", corpusDeps.size(), corpusFile);
+					long end = new Date().getTime();
+					LOGGER.info("Took {}s to load corpus.", (int) ((end-start)/1000));
+					return corpusDeps;
+				}
+			});
+		}
+	}
+
+	public DependencyStructure toDependencyStructure(String sentence) throws IOException {
+		sentence = Utils.asciiify(sentence);
 		
 		String tokenised = Utils.tokenise(sentence);
-		String output = webservice ? Utils.callWebservice(CANDC_WS_URL, tokenised) : Utils.runScript("./candc.sh", sentence);
+		String output = prop.useCandcWebservice() ?
+				Utils.callWebservice(prop.getCandcWebserviceUrl().toString(), tokenised) :
+				Utils.runScript("./candc.sh", sentence);
 		return getDependencyStructure(output);
 	}
 
-	public List<DependencyStructure> toDependencyStructures(String sentences) throws Exception {
+	public List<DependencyStructure> toDependencyStructures(String sentences) throws IOException {
 		List<String> lines = Utils.tokeniseSentences(sentences.replace('\n', ' ').replaceAll(" +", " "));
 		List<DependencyStructure> dses = new ArrayList<DependencyStructure>();
 		for (String line : lines) {
@@ -87,6 +121,7 @@ public class CandcSyntacticParser extends SyntacticParser {
 		else
 			return loadCorpusFromSerialized(grFileOrDir);
 	}
+	
 	@SuppressWarnings("unchecked")
 	public Collection<DependencyStructure> loadCorpusFromSerialized(File grSerializedFile) throws IOException {
 		ObjectInputStream ois = null;
@@ -123,6 +158,7 @@ public class CandcSyntacticParser extends SyntacticParser {
 			return file.length();
 		}
 	}
+	
 	private static InputStream getInputStream(File file) throws IOException {
 		if (file.getName().endsWith(".gz") || file.getName().endsWith(".zip")) {
 		    LOGGER.info("Opening zipped file...");
@@ -141,6 +177,7 @@ public class CandcSyntacticParser extends SyntacticParser {
 			return new FileInputStream(file);
 		}
 	}
+	
 	private Collection<DependencyStructure> loadCorpusFromCandcOutputFile(File grArchive, Integer maxSentences) throws IOException {
 		LOGGER.info("Single C&C output file.");
 //		long fileSize = getFileSize(grArchive);
@@ -163,6 +200,7 @@ public class CandcSyntacticParser extends SyntacticParser {
 	    }
 		return getDependencyStructures(new String(buffer), maxSentences);
 	}
+	
 	private Collection<DependencyStructure> loadCorpusFromCandcOutputDir(File grDirectory) throws IOException {
 		Collection<DependencyStructure> dses = new HashSet<DependencyStructure>();
 		Queue<File> files = new LinkedList<File>();
@@ -318,7 +356,7 @@ public class CandcSyntacticParser extends SyntacticParser {
 		}
 		else if (tokenMatcher.groupCount() == 6) {
 			String word = tokenMatcher.group(1).replace("\\/", "/");
-//			String lemma = tokenMatcher.group(2);
+//			String lemma = tokenMatcher.group(2); // using WordNet for lemmas instead. Pros/cons?
 			String tag = tokenMatcher.group(3);
 //			String phraseType = tokenMatcher.group(4); // not currently used. Doing anything with it would just mean a heavier object tree...
 			String namedEntity = tokenMatcher.group(5);
@@ -373,8 +411,15 @@ public class CandcSyntacticParser extends SyntacticParser {
 		return new GrammaticalRelation(GrammaticalRelation.GrType.valueOfByLabel(type), subtype, initialGrValue, tokens.get(headStr), tokens.get(dependentStr));
 	}
 	
-	// C&C has several non-standard POS tags. Some of these seem reasonable, e.g. $ for currencies, but some just look like errors.
-	// This function replaces the seemingly incorrect tags with valid PTB tags.
+	/**
+	 *  C&C has several non-standard POS tags. Some of these seem reasonable, e.g. $ for currencies, but some just look like errors.
+	 *  
+	 * This function replaces the seemingly incorrect tags with valid PTB tags.
+	 * 
+	 * @param word
+	 * @param pos
+	 * @return
+	 */
 	private static String posTagHacks(String word, String pos) {
 		if (pos.equals("SO"))
 			return "RB";
@@ -396,5 +441,24 @@ public class CandcSyntacticParser extends SyntacticParser {
 			// otherwise fall through - simple comma (or unknown)
 		}
 		return pos;
+	}
+	
+	@Override
+	public boolean useCorpus() {
+		return prop.isCandcCorpusEnabled();
+	}
+
+	@Override
+	public Collection<DependencyStructure> getCorpus() {
+		if (!prop.isCandcCorpusEnabled())
+			return ImmutableList.of();
+		if (corpusDeps != null)
+			return corpusDeps;
+		try {
+			corpusDeps = corpusLoadFuture.get();
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException("Unable to load corpus", e);
+		}
+		return corpusDeps;
 	}
 }

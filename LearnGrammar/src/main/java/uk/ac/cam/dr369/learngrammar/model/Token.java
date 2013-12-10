@@ -62,7 +62,7 @@ public class Token implements VeryCloneable<Token>, Comparable<Token>, Serializa
 		this.namedEntityClass = ner;
 		attached = false;
 		if (semanticAnalyser == null)
-			semanticAnalyser = WordnetSemanticAnalyser.getInstance(null);
+			semanticAnalyser = WordnetSemanticAnalyser.getInstance();
 		this.lemma = lemma == null && index >= 0 ? semanticAnalyser.lemmatise(this).get(0) : lemma; // index<0: special null token
 		this.verbFrame = verbFrame;
 	}

@@ -1,30 +1,20 @@
 package uk.ac.cam.dr369.learngrammar.commonality.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import java.io.File;
-import java.net.URL;
-
-import org.junit.BeforeClass;
 import org.junit.Test;
+
+import uk.ac.cam.dr369.learngrammar.commonality.FeatureProfile;
+import uk.ac.cam.dr369.learngrammar.commonality.Twig;
+import uk.ac.cam.dr369.learngrammar.model.CandcPtbPos;
+import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation;
+import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.GrType;
+import uk.ac.cam.dr369.learngrammar.model.Token;
 
 import com.google.common.collect.Lists;
 
-import uk.ac.cam.dr369.learngrammar.commonality.Twig;
-import uk.ac.cam.dr369.learngrammar.commonality.FeatureProfile;
-import uk.ac.cam.dr369.learngrammar.model.CandcPtbPos;
-import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation;
-import uk.ac.cam.dr369.learngrammar.model.Token;
-import uk.ac.cam.dr369.learngrammar.model.GrammaticalRelation.GrType;
-import uk.ac.cam.dr369.learngrammar.semantics.WordnetSemanticAnalyser;
-
 public class DirectedPathDsTest {
-	
-	@BeforeClass
-	public static void setUp() throws Exception {
-		URL dictUrl = new URL("file", null, "lib/wordnet"+File.separator+"WordNet-3.0"+File.separator+"dict");
-		WordnetSemanticAnalyser.getInstance(dictUrl); // initialises singleton internally with dictionary
-	}
 
 	@Test
 	public void testDescribe() {
